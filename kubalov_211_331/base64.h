@@ -27,5 +27,7 @@ decodes base64 format string into ASCCI string
 ***********************************************/
 char* base64_decode(char* cipher);
 
+char* base64_encode_binary(const unsigned char* data, size_t len);
+
 
 #endif //BASE46_H

@@ -16,7 +16,7 @@ std::string LibraryRecordManager::calculateHash(const LibraryRecord& record) {
     uint8_t hash[32];
     sha256_easy_hash(data.c_str(), data.length(), hash);
 
-    char* base64_hash = base64_encode((char*)hash);
+    char* base64_hash = base64_encode_binary(hash, 32);
     std::string result(base64_hash);
     free(base64_hash);
 
@@ -24,14 +24,11 @@ std::string LibraryRecordManager::calculateHash(const LibraryRecord& record) {
 }
 
 void LibraryRecordManager::verifyRecords() {
-    bool corrupted = false;
-
     for (size_t i = 0; i < records.size(); i++) {
         std::string calculatedHash = calculateHash(records[i]);
 
-        if (calculatedHash != records[i].hash || corrupted) {
+        if (calculatedHash != records[i].hash) {
             records[i].isValid = false;
-            corrupted = true;
 
             if (calculatedHash != records[i].hash) {
                 std::cout << "\n⚠ ВНИМАНИЕ: Запись #" << (i + 1) << " повреждена!" << std::endl;

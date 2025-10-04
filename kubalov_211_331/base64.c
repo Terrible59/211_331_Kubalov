@@ -72,3 +72,37 @@ char* base64_decode(char* cipher) {
     plain[p] = '\0';    /* string padding character */
     return plain;
 }
+
+char* base64_encode_binary(const unsigned char* data, size_t len) {
+    char counts = 0;
+    unsigned char buffer[3];
+    char* cipher = malloc(len * 4 / 3 + 4);
+    int i = 0, c = 0;
+
+    for (i = 0; i < len; i++) {
+        buffer[counts++] = data[i];
+        if (counts == 3) {
+            cipher[c++] = base46_map[buffer[0] >> 2];
+            cipher[c++] = base46_map[((buffer[0] & 0x03) << 4) + (buffer[1] >> 4)];
+            cipher[c++] = base46_map[((buffer[1] & 0x0f) << 2) + (buffer[2] >> 6)];
+            cipher[c++] = base46_map[buffer[2] & 0x3f];
+            counts = 0;
+        }
+    }
+
+    if (counts > 0) {
+        cipher[c++] = base46_map[buffer[0] >> 2];
+        if (counts == 1) {
+            cipher[c++] = base46_map[(buffer[0] & 0x03) << 4];
+            cipher[c++] = '=';
+        }
+        else {  // if counts == 2
+            cipher[c++] = base46_map[((buffer[0] & 0x03) << 4) + (buffer[1] >> 4)];
+            cipher[c++] = base46_map[(buffer[1] & 0x0f) << 2];
+        }
+        cipher[c++] = '=';
+    }
+
+    cipher[c] = '\0';
+    return cipher;
+}
