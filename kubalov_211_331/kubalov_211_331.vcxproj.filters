@@ -24,12 +24,24 @@
     <ClCompile Include="LibraryRecord.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="base64.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="sha256.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aes.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="LibraryRecord.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="base64.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="sha256.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

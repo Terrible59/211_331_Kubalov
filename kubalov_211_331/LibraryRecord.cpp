@@ -1,4 +1,4 @@
-#include "LibraryRecord.h"
+ï»¿#include "LibraryRecord.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -6,13 +6,46 @@
 
 extern "C" {
     #include "aes.h"
+    #include "sha256.h"
+    #include "base64.h"
 }
 
+std::string LibraryRecordManager::calculateHash(const LibraryRecord& record) {
+    std::string data = record.bookTitle + record.dateTime + record.readerCardNum;
+
+    uint8_t hash[32];
+    sha256_easy_hash(data.c_str(), data.length(), hash);
+
+    char* base64_hash = base64_encode((char*)hash);
+    std::string result(base64_hash);
+    free(base64_hash);
+
+    return result;
+}
+
+void LibraryRecordManager::verifyRecords() {
+    bool corrupted = false;
+
+    for (size_t i = 0; i < records.size(); i++) {
+        std::string calculatedHash = calculateHash(records[i]);
+
+        if (calculatedHash != records[i].hash || corrupted) {
+            records[i].isValid = false;
+            corrupted = true;
+
+            if (calculatedHash != records[i].hash) {
+                std::cout << "\nâš  Ð’ÐÐ˜ÐœÐÐÐ˜Ð•: Ð—Ð°Ð¿Ð¸ÑÑŒ #" << (i + 1) << " Ð¿Ð¾Ð²Ñ€ÐµÐ¶Ð´ÐµÐ½Ð°!" << std::endl;
+                std::cout << "  ÐžÐ¶Ð¸Ð´Ð°ÐµÐ¼Ñ‹Ð¹ Ñ…ÐµÑˆ: " << records[i].hash << std::endl;
+                std::cout << "  Ð’Ñ‹Ñ‡Ð¸ÑÐ»ÐµÐ½Ð½Ñ‹Ð¹ Ñ…ÐµÑˆ: " << calculatedHash << std::endl;
+            }
+        }
+    }
+}
 
 std::string LibraryRecordManager::decryptFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
-        std::cerr << "Îøèáêà: íå óäàëîñü îòêðûòü ôàéë " << filename << std::endl;
+        std::cerr << "ÐžÑˆÐ¸Ð±ÐºÐ°: Ð½Ðµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¾Ñ‚ÐºÑ€Ñ‹Ñ‚ÑŒ Ñ„Ð°Ð¹Ð» " << filename << std::endl;
         return "";
     }
 
@@ -23,7 +56,7 @@ std::string LibraryRecordManager::decryptFile(const std::string& filename) {
     file.close();
 
     if (encrypted_data.empty()) {
-        std::cerr << "Îøèáêà: ôàéë ïóñò" << std::endl;
+        std::cerr << "ÐžÑˆÐ¸Ð±ÐºÐ°: Ñ„Ð°Ð¹Ð» Ð¿ÑƒÑÑ‚" << std::endl;
         return "";
     }
 
@@ -48,7 +81,7 @@ std::string LibraryRecordManager::decryptFile(const std::string& filename) {
 bool LibraryRecordManager::loadFromFile(const std::string& filename) {
     std::string decrypted_data = decryptFile(filename);
     if (decrypted_data.empty()) {
-        std::cerr << "Îøèáêà ðàñøèôðîâêè ôàéëà" << std::endl;
+        std::cerr << "ÐžÑˆÐ¸Ð±ÐºÐ° Ñ€Ð°ÑÑˆÐ¸Ñ„Ñ€Ð¾Ð²ÐºÐ¸ Ñ„Ð°Ð¹Ð»Ð°" << std::endl;
         return false;
     }
 
@@ -84,23 +117,25 @@ bool LibraryRecordManager::loadFromFile(const std::string& filename) {
         fieldIndex++;
     }
 
-    std::cout << "Çàãðóæåíî çàïèñåé: " << records.size() << std::endl;
+    verifyRecords();
+
+    std::cout << "Ð—Ð°Ð³Ñ€ÑƒÐ¶ÐµÐ½Ð¾ Ð·Ð°Ð¿Ð¸ÑÐµÐ¹: " << records.size() << std::endl;
     return true;
 }
 
 void LibraryRecordManager::displayRecords() const {
     if (records.empty()) {
-        std::cout << "Íåò çàïèñåé äëÿ îòîáðàæåíèÿ." << std::endl;
+        std::cout << "ÐÐµÑ‚ Ð·Ð°Ð¿Ð¸ÑÐµÐ¹ Ð´Ð»Ñ Ð¾Ñ‚Ð¾Ð±Ñ€Ð°Ð¶ÐµÐ½Ð¸Ñ." << std::endl;
         return;
     }
 
-    std::cout << "\n========== ÁÈÁËÈÎÒÅ×ÍÛÅ ÇÀÏÈÑÈ ==========" << std::endl;
+    std::cout << "\n========== Ð‘Ð˜Ð‘Ð›Ð˜ÐžÐ¢Ð•Ð§ÐÐ«Ð• Ð—ÐÐŸÐ˜Ð¡Ð˜ ==========" << std::endl;
     for (size_t i = 0; i < records.size(); i++) {
-        std::cout << "\nÇàïèñü #" << (i + 1) << ":" << std::endl;
-        std::cout << "  Õåø SHA-256 (base64): " << records[i].hash << std::endl;
-        std::cout << "  Íàçâàíèå êíèãè: " << records[i].bookTitle << std::endl;
-        std::cout << "  Äàòà è âðåìÿ: " << records[i].dateTime << std::endl;
-        std::cout << "  Íîìåð áèëåòà: " << records[i].readerCardNum << std::endl;
+        std::cout << "\nÐ—Ð°Ð¿Ð¸ÑÑŒ #" << (i + 1) << ":" << std::endl;
+        std::cout << "  Ð¥ÐµÑˆ SHA-256 (base64): " << records[i].hash << std::endl;
+        std::cout << "  ÐÐ°Ð·Ð²Ð°Ð½Ð¸Ðµ ÐºÐ½Ð¸Ð³Ð¸: " << records[i].bookTitle << std::endl;
+        std::cout << "  Ð”Ð°Ñ‚Ð° Ð¸ Ð²Ñ€ÐµÐ¼Ñ: " << records[i].dateTime << std::endl;
+        std::cout << "  ÐÐ¾Ð¼ÐµÑ€ Ð±Ð¸Ð»ÐµÑ‚Ð°: " << records[i].readerCardNum << std::endl;
     }
     std::cout << "\n=========================================" << std::endl;
 }

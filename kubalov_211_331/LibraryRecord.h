@@ -10,6 +10,7 @@ struct LibraryRecord {
     std::string bookTitle;     
     std::string dateTime;
     std::string readerCardNum;
+    bool isValid = true;
 };
 
 /**
@@ -37,6 +38,15 @@ private:
      * @return Данные файла
      */
     std::string decryptFile(const std::string& filename);
+
+    /**
+     * Вычисляет хэш записи
+     * @param record запись
+     * @return хэш в base64
+     */
+    std::string calculateHash(const LibraryRecord& record);
+
+    void verifyRecords();
 
 public:
     /**
