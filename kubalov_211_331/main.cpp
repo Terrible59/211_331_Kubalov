@@ -58,7 +58,8 @@ int main() {
     SetConsoleOutputCP(1251);
 
     LibraryRecordManager manager;
-    std::string filename = "C:\\Users\\power\\Desktop\\secure_dev\\kubalov_211_331\\Debug\\library_records_enc.txt";
+    //std::string filename = "C:\\Users\\power\\Desktop\\secure_dev\\kubalov_211_331\\Debug\\library_records_enc.txt";
+    std::string filename = "C:\\Users\\power\\Desktop\\secure_dev\\kubalov_211_331\\Debug\\library_records_enc_corrupted.txt";
 
     std::cout << "Загрузка данных из файла: " << filename << std::endl;
     if (!manager.loadFromFile(filename)) {

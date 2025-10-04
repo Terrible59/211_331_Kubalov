@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <windows.h>
 
 
 extern "C" {
@@ -55,17 +56,15 @@ void LibraryRecordManager::verifyRecords() {
     for (size_t i = 0; i < records.size(); i++) {
         std::string calculatedHash = calculateHash(records[i]);
 
+        records[i].hash.erase(records[i].hash.find_last_not_of(" \n\r\t") + 1);
+        records[i].hash.erase(0, records[i].hash.find_first_not_of(" \n\r\t"));
+
         if (calculatedHash != records[i].hash) {
             records[i].isValid = false;
 
-            records[i].hash.erase(records[i].hash.find_last_not_of(" \n\r\t") + 1);
-            records[i].hash.erase(0, records[i].hash.find_first_not_of(" \n\r\t"));
-
-            if (calculatedHash != records[i].hash) {
-                std::cout << "\n⚠ ВНИМАНИЕ: Запись #" << (i + 1) << " повреждена!" << std::endl;
-                std::cout << "  Ожидаемый хеш: " << records[i].hash << std::endl;
-                std::cout << "  Вычисленный хеш: " << calculatedHash << std::endl;
-            }
+            std::cout << "\n⚠ ВНИМАНИЕ: Запись #" << (i + 1) << " повреждена!" << std::endl;
+            std::cout << "  Ожидаемый хеш: " << records[i].hash << std::endl;
+            std::cout << "  Вычисленный хеш: " << calculatedHash << std::endl;
         }
     }
 }
@@ -200,13 +199,26 @@ void LibraryRecordManager::displayRecords() const {
         return;
     }
 
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
     std::cout << "\n========== БИБЛИОТЕЧНЫЕ ЗАПИСИ ==========" << std::endl;
     for (size_t i = 0; i < records.size(); i++) {
-        std::cout << "\nЗапись #" << (i + 1) << ":" << std::endl;
+        if (!records[i].isValid) {
+            SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
+            std::cout << "\n⚠ ПОВРЕЖДЕННАЯ ЗАПИСЬ #" << (i + 1) << ":" << std::endl;
+        }
+        else {
+            SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+            std::cout << "\n✓ Запись #" << (i + 1) << ":" << std::endl;
+        }
+
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
         std::cout << "  Хеш SHA-256 (base64): " << records[i].hash << std::endl;
         std::cout << "  Название книги: " << records[i].bookTitle << std::endl;
         std::cout << "  Дата и время: " << records[i].dateTime << std::endl;
         std::cout << "  Номер билета: " << records[i].readerCardNum << std::endl;
     }
+
+    SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
     std::cout << "\n=========================================" << std::endl;
 }
