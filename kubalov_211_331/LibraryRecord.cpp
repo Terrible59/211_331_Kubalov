@@ -10,6 +10,17 @@ extern "C" {
     #include "base64.h"
 }
 
+std::string LibraryRecordManager::getCurrentDateTime() {
+    time_t now = time(0);
+    struct tm timeinfo;
+    localtime_s(&timeinfo, &now);
+
+    char buffer[80];
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
+
+    return std::string(buffer);
+}
+
 std::string LibraryRecordManager::calculateHash(const LibraryRecord& record) {
     std::string data = record.bookTitle + record.dateTime + record.readerCardNum;
 
@@ -23,12 +34,32 @@ std::string LibraryRecordManager::calculateHash(const LibraryRecord& record) {
     return result;
 }
 
+bool LibraryRecordManager::addRecord(const std::string& bookTitle, const std::string& readerCardNum) {
+    LibraryRecord newRecord;
+    newRecord.bookTitle = bookTitle;
+    newRecord.readerCardNum = readerCardNum;
+    newRecord.dateTime = getCurrentDateTime(); 
+    newRecord.hash = calculateHash(newRecord); 
+    newRecord.isValid = true;
+
+    records.push_back(newRecord);
+
+    std::cout << "\n✓ Запись успешно добавлена!" << std::endl;
+    std::cout << "  Дата и время: " << newRecord.dateTime << std::endl;
+    std::cout << "  Хеш SHA-256: " << newRecord.hash << std::endl;
+
+    return true;
+}
+
 void LibraryRecordManager::verifyRecords() {
     for (size_t i = 0; i < records.size(); i++) {
         std::string calculatedHash = calculateHash(records[i]);
 
         if (calculatedHash != records[i].hash) {
             records[i].isValid = false;
+
+            records[i].hash.erase(records[i].hash.find_last_not_of(" \n\r\t") + 1);
+            records[i].hash.erase(0, records[i].hash.find_first_not_of(" \n\r\t"));
 
             if (calculatedHash != records[i].hash) {
                 std::cout << "\n⚠ ВНИМАНИЕ: Запись #" << (i + 1) << " повреждена!" << std::endl;
@@ -37,6 +68,49 @@ void LibraryRecordManager::verifyRecords() {
             }
         }
     }
+}
+
+bool LibraryRecordManager::encryptAndSaveFile(const std::string& filename) {
+    std::ostringstream oss;
+    for (const auto& record : records) {
+        oss << record.hash << "\n";
+        oss << record.bookTitle << "\n";
+        oss << record.dateTime << "\n";
+        oss << record.readerCardNum << "\n";
+    }
+
+    std::string data = oss.str();
+
+    size_t padding_len = 16 - (data.length() % 16);
+    for (size_t i = 0; i < padding_len; i++) {
+        data += (char)padding_len;
+    }
+
+    std::vector<unsigned char> buffer(data.begin(), data.end());
+
+    struct AES_ctx ctx;
+    AES_init_ctx_iv(&ctx, aes_key, aes_iv);
+
+    AES_CBC_encrypt_buffer(&ctx, buffer.data(), buffer.size());
+
+    std::ofstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Ошибка: не удалось создать файл " << filename << std::endl;
+        return false;
+    }
+
+    file.write((char*)buffer.data(), buffer.size());
+    file.close();
+
+    return true;
+}
+
+bool LibraryRecordManager::saveToFile(const std::string& filename) {
+    if (encryptAndSaveFile(filename)) {
+        std::cout << "✓ Данные успешно сохранены и зашифрованы" << std::endl;
+        return true;
+    }
+    return false;
 }
 
 std::string LibraryRecordManager::decryptFile(const std::string& filename) {
