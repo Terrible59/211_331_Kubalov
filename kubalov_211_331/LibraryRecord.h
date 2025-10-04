@@ -46,6 +46,22 @@ private:
      */
     std::string calculateHash(const LibraryRecord& record);
 
+    /**
+     * Возвращает текущую дату и время
+     * @return дата и время в ISO
+     */
+    std::string getCurrentDateTime();
+
+    /**
+    * Шифрует и записывает файл
+    * @param filename файл
+    * @return успешно/не успешно
+    */
+    bool encryptAndSaveFile(const std::string& filename);
+
+    /**
+    * Подтверждение подписей записей
+    */
     void verifyRecords();
 
 public:
@@ -65,4 +81,14 @@ public:
      * Возвращает количество загруженных записей
      */
     size_t getRecordCount() const { return records.size(); }
+
+    /**
+    * Добавляет запись
+    */
+    bool addRecord(const std::string& bookTitle, const std::string& readerCardNum);
+
+    /**
+    * Сохраняет в файл
+    */
+    bool saveToFile(const std::string& filename);
 };

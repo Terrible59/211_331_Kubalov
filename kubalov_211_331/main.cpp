@@ -1,34 +1,68 @@
-#include "LibraryRecord.h"
+п»ї#include "LibraryRecord.h"
 #include <iostream>
 #include <string>
 #include <windows.h>
 
 /**
- * Отображает главное меню приложения
+ * РћС‚РѕР±СЂР°Р¶Р°РµС‚ РіР»Р°РІРЅРѕРµ РјРµРЅСЋ РїСЂРёР»РѕР¶РµРЅРёСЏ
  */
 void displayMenu() {
-    std::cout << "\n=== СИСТЕМА УЧЕТА БИБЛИОТЕЧНЫХ ЗАПИСЕЙ ===" << std::endl;
-    std::cout << "1. Данные - показать все записи" << std::endl;
-    std::cout << "2. Показать количество записей" << std::endl;
-    std::cout << "0. Выход" << std::endl;
+    std::cout << "\n=== РЎРРЎРўР•РњРђ РЈР§Р•РўРђ Р‘РР‘Р›РРћРўР•Р§РќР«РҐ Р—РђРџРРЎР•Р™ ===" << std::endl;
+    std::cout << "1. Р”Р°РЅРЅС‹Рµ - РїРѕРєР°Р·Р°С‚СЊ РІСЃРµ Р·Р°РїРёСЃРё" << std::endl;
+    std::cout << "2. РџРѕРєР°Р·Р°С‚СЊ РєРѕР»РёС‡РµСЃС‚РІРѕ Р·Р°РїРёСЃРµР№" << std::endl;
+    std::cout << "3. Р”РѕР±Р°РІРёС‚СЊ РЅРѕРІСѓСЋ Р·Р°РїРёСЃСЊ" << std::endl;
+    std::cout << "0. Р’С‹С…РѕРґ" << std::endl;
     std::cout << "==========================================" << std::endl;
-    std::cout << "Выберите действие: ";
+    std::cout << "Р’С‹Р±РµСЂРёС‚Рµ РґРµР№СЃС‚РІРёРµ: ";
+}
+
+void addRecordDialog(LibraryRecordManager& manager, const std::string& filename) {
+    std::cin.ignore(); // РћС‡РёС‰Р°РµРј Р±СѓС„РµСЂ РїРѕСЃР»Рµ РїСЂРµРґС‹РґСѓС‰РµРіРѕ РІРІРѕРґР° С‡РёСЃР»Р°
+
+    std::string bookTitle, readerCardNum;
+
+    std::cout << "\n=== Р”РћР‘РђР’Р›Р•РќРР• РќРћР’РћР™ Р—РђРџРРЎР ===" << std::endl;
+
+    std::cout << "Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ РєРЅРёРіРё: ";
+    std::getline(std::cin, bookTitle);
+
+    if (bookTitle.empty()) {
+        std::cout << "РћС€РёР±РєР°: РЅР°Р·РІР°РЅРёРµ РєРЅРёРіРё РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј!" << std::endl;
+        return;
+    }
+
+    std::cout << "Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ С‡РёС‚Р°С‚РµР»СЊСЃРєРѕРіРѕ Р±РёР»РµС‚Р°: ";
+    std::getline(std::cin, readerCardNum);
+
+    if (readerCardNum.empty()) {
+        std::cout << "РћС€РёР±РєР°: РЅРѕРјРµСЂ Р±РёР»РµС‚Р° РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј!" << std::endl;
+        return;
+    }
+
+    if (manager.addRecord(bookTitle, readerCardNum)) {
+        if (manager.saveToFile(filename)) {
+            std::cout << "вњ“ Р¤Р°Р№Р» СѓСЃРїРµС€РЅРѕ РѕР±РЅРѕРІР»РµРЅ" << std::endl;
+        }
+        else {
+            std::cout << "вљ  РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ С„Р°Р№Р»Р°" << std::endl;
+        }
+    }
 }
 
 /**
- * Основная функция приложения
+ * РћСЃРЅРѕРІРЅР°СЏ С„СѓРЅРєС†РёСЏ РїСЂРёР»РѕР¶РµРЅРёСЏ
  */
 int main() {
-    // Настройка кодировки консоли для корректного отображения русского текста
+    // РќР°СЃС‚СЂРѕР№РєР° РєРѕРґРёСЂРѕРІРєРё РєРѕРЅСЃРѕР»Рё РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕРіРѕ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ СЂСѓСЃСЃРєРѕРіРѕ С‚РµРєСЃС‚Р°
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
     LibraryRecordManager manager;
     std::string filename = "C:\\Users\\power\\Desktop\\secure_dev\\kubalov_211_331\\Debug\\library_records_enc.txt";
 
-    std::cout << "Загрузка данных из файла: " << filename << std::endl;
+    std::cout << "Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С… РёР· С„Р°Р№Р»Р°: " << filename << std::endl;
     if (!manager.loadFromFile(filename)) {
-        std::cout << "Не удалось загрузить данные. Проверьте наличие файла." << std::endl;
+        std::cout << "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РґР°РЅРЅС‹Рµ. РџСЂРѕРІРµСЂСЊС‚Рµ РЅР°Р»РёС‡РёРµ С„Р°Р№Р»Р°." << std::endl;
         return 1;
     }
 
@@ -43,15 +77,19 @@ int main() {
             break;
 
         case 2:
-            std::cout << "\nВсего записей: " << manager.getRecordCount() << std::endl;
+            std::cout << "\nР’СЃРµРіРѕ Р·Р°РїРёСЃРµР№: " << manager.getRecordCount() << std::endl;
+            break;
+
+        case 3:
+            addRecordDialog(manager, filename);
             break;
 
         case 0:
-            std::cout << "Выход из программы..." << std::endl;
+            std::cout << "Р’С‹С…РѕРґ РёР· РїСЂРѕРіСЂР°РјРјС‹..." << std::endl;
             break;
 
         default:
-            std::cout << "Неверный выбор. Попробуйте снова." << std::endl;
+            std::cout << "РќРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ. РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°." << std::endl;
             break;
         }
     }
